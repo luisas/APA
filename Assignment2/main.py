@@ -1,31 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-
-
-# Exercise 2
-# deadline friday
-# Find the number of sequence pairs that are in vicinity and are on the same chr.
-# Vicinity is defined by the distance threshold: k.
-# eucladian distance compared to the threshold.
-#
-# 1: Create the structure for Node
-# Should be a linked list about loci and location of the sequence. Each node has attributes id, loci and position.
-# 2: Create Linked list
-# 3: Compare based on vicinity (maybe sorting?)
-#
-# Input file:
-# seq1, g11.2, (3,5)
-#
-# Output:
-# linked list
-# Nodes attributes: id and number of found
-# Sorted!
-# By the number of sequences
-
-
-
-
 # -------------------------------
 # Import modules
 import csv
