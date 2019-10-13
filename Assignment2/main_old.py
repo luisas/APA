@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-
-
 # -------------------------------
 # Import modules
 import csv
@@ -37,9 +35,9 @@ class Locus:
                 self.chrom = name.split(arm)[0]
                 self.arm = arm
     def __ge__(self,other):
-        if int(self.chrom) > int(other.chrom):
+        if int(self.chrom) >= int(other.chrom):
             return True
-        elif  not (int(self.chrom) != int(other.chrom) or self.arm < other.arm):
+        elif  int(self.chrom) == int(other.chrom) and self.arm >= other.arm:
             return True
         else:
             return False
@@ -54,7 +52,7 @@ class Locus:
         if int(self.chrom) < int(other.chrom):
             return True
 
-        elif not (int(self.chrom) != int(other.chrom) or self.arm > other.arm):
+        elif  int(self.chrom) == int(other.chrom) and self.arm <= other.arm:
             return True
         else:
             return False
@@ -91,17 +89,16 @@ class Node:
             return True
 
 
-
-
 class SequenceNode(Node):
     """
     Inherited by Node class. It is a Node having as well locus and position information.
     """
-    def __init__(self,id,locus,position,nextNode = None):
+    def __init__(self,id,locus,position,nextNode = None,prevNode = None):
         self.id = id
         self.locus = locus
         self.position = position
         self.next = nextNode
+        self.prev = prevNode
 
     def getArm(self):
         return(str(self.locus.chrom)+str(self.locus.arm))
@@ -134,9 +131,12 @@ class SequenceNode(Node):
             return True
         else:
             return False
+
+
 class DistanceNode(Node):
     """
-    Inherited by Node class. It is a Node having as id the locus and n as a count.
+    Inherited by Node class.
+    It is a Node having as id the locus and n as a count.
     """
     def __init__(self,id,n,nextNode = None,prevNode = None):
         self.id = id
@@ -148,17 +148,16 @@ class DistanceNode(Node):
 
 
 
+
 class LinkedList:
     """
-    Implementation of a single linked list
+    Implementation of a double-linked list
     """
     global root
-    global before_last
     global last
-
-    def __init__(self,root = None, before_last = None ):
+    def __init__(self,root = None, last = None ):
         self.root = root
-        self.before_last = before_last
+        self.last = last
 
     # Traverse the linked-list and prints out the content
     def traverse(self):
@@ -167,27 +166,20 @@ class LinkedList:
             node.print_it()
             node = node.next
 
+    def get_last(self):
+        return self.last
+
     # Push a node at the beginning of the list
     def push(self, node):
         if self.root == None:
             self.root = node
-        if self.before_last == None:
-            self.before_last = node
+        if self.last == None:
+            self.last = node
         else:
             node.next = self.root
+            node.next.prev = node
             self.root = node
-    def append(self,node):
-        if self.root == None:
-            self.root = node
-        if self.before_last == None:
-            self.before_last = node
-        else:
-            if self.before_last.next == None:
-                last = self.before_last
-            else:
-                last = self.before_last.next
-            last.next = node
-            self.before_last = last
+
     # Gets a node in a determined position
     def get(self,position):
         i = 0
@@ -197,13 +189,34 @@ class LinkedList:
             i+=1
         return node
 
-    def insertAfter(self,node,current):
-        if  current == self.before_last:
-            self.before_last = node
-        elif current == self.before_last.next:
-            self.before_last = self.before_last.next
-        node.next = current.next
-        current.next = node
+    def append(self,node):
+        if self.root == None:
+            self.root = node
+        if self.last == None:
+            self.last = node
+        else:
+            last = self.get_last()
+            last.next = node
+            node.prev = last
+            self.last = node
+
+    def delete(self,node):
+        if node == self.root:
+            self.root = node.next
+            self.root.prev = None
+        elif node == self.last:
+            self.last = node.prev
+            self.last.next = None
+        else:
+            node.prev.next = node.next
+            node.prev.next.prev = node.prev
+
+    def insertBefore(self,node,current):
+        temp = node
+        node.next = current
+        node.prev = current.prev
+        current.prev.next = temp
+        current.prev = temp
 
 
 
@@ -213,28 +226,27 @@ def insert_node(sl,node):
     """
     if sl.root == None:
         sl.root = node
-    if sl.before_last == None:
-        sl.before_last = node
+    if sl.last == None:
+        sl.last = node
     else:
         # put at the beginning
         if sl.root >= node:
-            temp = sl.root
-            sl.root  = SequenceNode(node.id,node.locus,node.position,temp)
-        elif not ( sl.before_last.next == None or sl.before_last.next  > node):
+            #print("first case")
+            sl.root  = SequenceNode(node.id,node.locus,node.position,sl.root)
+            sl.root.next.prev = sl.root
+        # Put in the end
+        elif sl.last <=node:
             #print("end case")
-            sl.append(node)
+            last = sl.last
+            sl.last = SequenceNode(node.id,node.locus,node.position,None,last)
+            sl.last.prev.next = sl.last
+        # Put in the middle
         else:
-            #print("middle /end case")
+            #print("middle case")
             current = sl.root
-            current_prev = sl.root
-            while current != None and current < node:
-                current_prev = current
+            while current.hasNext() and current < node:
                 current = current.next
-            sl.insertAfter(node,current_prev)
-
-
-
-# In[299]:
+            sl.insertBefore(node,current)
 
 
 def create_sequence_linkedList(infile):
@@ -255,8 +267,6 @@ def create_sequence_linkedList(infile):
     return(ll)
 
 
-
-
 def print_out(ll,outfile):
     """
     Prints the content of the linked list in a tab-separated file.
@@ -267,13 +277,11 @@ def print_out(ll,outfile):
         file.write(str(node.id)+"\t" + str(node.n) + "\n")
         node = node.next
 
-
-
-
 def calc_distances(ll,k):
     """
     Calculates the distance
     """
+    #ll = ll.sortByChromArm2()
     distance_list = LinkedList()
     left_node = ll.root
     count  = 0
@@ -299,7 +307,6 @@ def calc_distances(ll,k):
     return(distance_list)
 
 
-
 if __name__ == "__main__":
     # Collects command line inputs
     infile = sys.argv[1]
@@ -316,19 +323,3 @@ if __name__ == "__main__":
     print("Done!\n")
     print("The output can be found at :")
     print(outfile+"\n")
-
-
-# infile ="/Users/luisasantus/Desktop/apa/Assignment2/inputs/input1.txt"
-# sequence_ll = create_sequence_linkedList(infile)
-# sequence_ll.traverse()
-# dist_ll = calc_distances(sequence_ll, 1.5)
-# dist_ll.traverse()
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
