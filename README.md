@@ -6,6 +6,9 @@ Exercises and Project of the APA class
 
 ## Assignment 2
 
+The performance of the code was tested on: 
+Intel(R) Xeon(R) E-2124 CPU @ 3.30GHz
+
 ### Input1
 ![I1](Assignment2/time/input1.png)
 
