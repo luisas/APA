@@ -1,5 +1,5 @@
 # Advanced Programming Course
-Exercises and Project of the APA class
+Exercises and Project of "Advanced programming" class
 
 ## Assignment 1
 ![PlotFunctions](Assignment1/results/01/functions.png)
